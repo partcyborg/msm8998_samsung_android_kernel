@@ -1,0 +1,233 @@
+/* Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+/*
+ * As a general rule, only TabS4 project specific property overrides should be placed
+ * inside this file.
+ */
+
+/*
+ * Implement here Samsung TabS4 project specific dtsi
+ */
+
+#include "msm8998-sec-gts4llte-input-common.dtsi"
+
+/{
+	reserved-memory {
+		/delete-node/ pil_mba_region;
+		pil_mba_mem: pil_mba_region {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x95900000 0 0x200000>;
+		};
+
+		/delete-node/ pil_slpi_region;
+		pil_slpi_mem: pil_slpi_region {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x94D00000 0 0xC00000>;
+		};
+
+		/delete-node/ pil_video_region;
+		pil_video_mem: pil_video_region {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x94800000 0 0x500000>;
+		};
+
+		/delete-node/ pil_adsp_region@91900000;
+		pil_adsp_mem: pil_adsp_region {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x92100000 0 0x2700000>;
+		};
+
+		/delete-node/ modem_region@8ac00000;
+		modem_mem: modem_region {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x8ac00000 0 0x7500000>;
+		};
+
+		/delete-node/ removed_regions@85800000;
+		removed_regions: removed_regions {
+			compatible = "removed-dma-pool";
+			no-map;
+			reg = <0 0x85800000 0 0x4900000>;
+		};
+
+		secure_camera_region: secure_camera_region {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0 0xFE400000 0 0x1400000>;
+			label = "secure_camera_region";
+		};
+
+		secure_camera_scratch_region: secure_camera_scratch_region {
+			compatible = "shared-dma-pool";
+			no-map;
+			reg = <0 0xFE200000 0 0x200000>;
+			label = "secure_camera_scratch_region";
+		};
+
+		/delete-node/ camera_mem_region@0xC0000000;
+		/* Reserved Mem for Camera 410M */
+		camera_mem: camera_mem_region@0xC0000000 {
+			compatible = "removed-dma-pool";
+			reg = <0x0 0xC0000000 0x0 0x19A00000>;
+		};
+	};
+};
+
+&soc {
+	qcom,ion {
+		qcom,ion-heap@17 { /* SECURE CAMERA HEAP */
+			reg = <17>;
+			memory-region = <&secure_camera_region>;
+			qcom,ion-heap-type = "HYP_CMA";
+		};
+
+		qcom,ion-heap@18 { /* SECURE CAMERA HEAP */
+			reg = <18>;
+			memory-region = <&secure_camera_scratch_region>;
+			qcom,ion-heap-type = "HYP_CMA";
+		};
+	};
+
+	qcom_seecom: qseecom@86600000 {
+		reg = <0x86D00000 0x3400000>;
+	};
+};
+
+&mdss_dp_ctrl {
+	/delete-property/ qcom,dp-usbpd-detection;
+};
+
+&soc {
+	sec_abc {
+		compatible = "samsung,sec_abc";
+		status = "okay";
+
+		gpu {
+			gpu,label="GPU fault";
+			gpu,threshold_count=<4>;
+			gpu,threshold_time=<1200>;
+		};
+		gpu_page {
+			gpu_page,label="GPU page fault";
+			gpu_page,threshold_count=<20>;
+			gpu_page,threshold_time=<1200>;
+		};
+		aicl {
+			aicl,label="battery aicl";
+			aicl,threshold_count=<5>;
+			aicl,threshold_time=<300>;
+		};
+	};
+};
+
+&sdhc_2 {
+	qcom,sdr104-wa;
+};
+
+&msm_cpufreq {
+	/delete-node/ qcom,cpufreq-boot-limit-default;
+
+	qcom,cpufreq-boot-limit-greatqlte-fac {
+		qcom,cpufreq-boot-limit,num-period = <2>;
+		qcom,cpufreq-boot-limit,table = <1478400 1497600 300>, /* period 0 */
+					<1478400 1497600 450>; /* period 1 */
+		status = "disabled";
+	};
+	
+	qcom,cpufreq-boot-limit-greatqlte {
+		status = "disabled";
+	};
+
+};
+
+/* GPU overrides (GPU Max clock 670->710) by:biam.lee*/
+&msm_gpu {
+	/* Updated chip ID */
+	qcom,chipid = <0x05040001>;
+	qcom,initial-pwrlevel = <6>;
+
+	qcom,gpu-pwrlevels {
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		compatible = "qcom,gpu-pwrlevels";
+
+		qcom,gpu-pwrlevel@0 {
+			reg = <0>;
+			qcom,gpu-freq = <710000000>;
+			qcom,bus-freq = <12>;
+			qcom,bus-min = <12>;
+			qcom,bus-max = <12>;
+		};
+
+		qcom,gpu-pwrlevel@1 {
+			reg = <1>;
+			qcom,gpu-freq = <670000000>;
+			qcom,bus-freq = <12>;
+			qcom,bus-min = <11>;
+			qcom,bus-max = <12>;
+		};
+
+		qcom,gpu-pwrlevel@2 {
+			reg = <2>;
+			qcom,gpu-freq = <596000000>;
+			qcom,bus-freq = <11>;
+			qcom,bus-min = <9>;
+			qcom,bus-max = <12>;
+		};
+
+ 		qcom,gpu-pwrlevel@3 {
+ 			reg = <3>;
+			qcom,gpu-freq = <515000000>;
+			qcom,bus-freq = <11>;
+			qcom,bus-min = <9>;
+			qcom,bus-max = <12>;
+		};
+
+		qcom,gpu-pwrlevel@4 {
+			reg = <4>;
+ 			qcom,gpu-freq = <414000000>;
+ 			qcom,bus-freq = <9>;
+ 			qcom,bus-min = <8>;
+ 			qcom,bus-max = <11>;
+ 		};
+ 
+		qcom,gpu-pwrlevel@5 {
+			reg = <5>;
+ 			qcom,gpu-freq = <342000000>;
+ 			qcom,bus-freq = <8>;
+ 			qcom,bus-min = <5>;
+ 			qcom,bus-max = <9>;
+ 		};
+ 
+		qcom,gpu-pwrlevel@6 {
+			reg = <6>;
+ 			qcom,gpu-freq = <257000000>;
+ 			qcom,bus-freq = <5>;
+ 			qcom,bus-min = <3>;
+ 			qcom,bus-max = <8>;
+ 		};
+ 
+		qcom,gpu-pwrlevel@7 {
+			reg = <7>;
+ 			qcom,gpu-freq = <27000000>;
+ 			qcom,bus-freq = <0>;
+ 			qcom,bus-min = <0>;
+		};
+	};
+};

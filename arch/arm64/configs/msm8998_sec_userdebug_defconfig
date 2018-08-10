@@ -1,0 +1,12 @@
+
+# CONFIG_RKP_KDP is not set
+# CONFIG_RKP_NS_PROT is not set
+
+#
+# Samsung Rooting Restriction Feature
+#
+# CONFIG_SEC_RESTRICT_ROOTING is not set
+# CONFIG_SEC_RESTRICT_SETUID is not set
+# CONFIG_SEC_RESTRICT_FORK is not set
+# CONFIG_SEC_RESTRICT_ROOTING_LOG is not set
+CONFIG_REGMAP_ALLOW_WRITE_DEBUGFS=y

@@ -1,0 +1,178 @@
+/* Copyright (c) 2016, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+
+#include <dt-bindings/input/input.h>
+
+&soc {
+	gpio_keys {
+		compatible = "gpio-keys";
+		input-name = "gpio-keys";
+
+		/delete-node/ cam_snapshot;
+		/delete-node/ cam_focus;
+
+		wink_key {
+			label = "wink_key";
+			gpios = <&pm8998_gpios 19 0x1>;
+			linux,input-type = <1>;
+			linux,code = <KEY_WINK>;
+			gpio-key,wakeup;
+			debounce-interval = <15>;
+		};
+	};
+
+	wacom_ldo_en: wacom_ldo_en {
+		compatible = "regulator-fixed";
+		regulator-name = "wacom_3.3v";
+		regulator-min-microvolt = <3300000>;
+		regulator-max-microvolt = <3300000>;
+		gpio = <&tlmm 124 0>;
+		enable-active-high;
+		regulator-boot-on;
+	};
+};
+
+&i2c_8 {
+	pinctrl-names = "i2c_active", "i2c_sleep", "default";
+	pinctrl-0 = <&i2c_8_active>;
+	pinctrl-1 = <&i2c_8_sleep>;
+	pinctrl-2 = <&i2c_8_active>;
+
+	status = "okay";
+
+	/* synaptics */
+	synaptics_rmi4_i2c@20 {
+		status = "disabled";
+		compatible = "synaptics,rmi4";
+		reg = <0x20>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <121 0x0>;
+
+		pinctrl-names = "on_state", "off_state";
+		pinctrl-0 = <&attn_irq>;
+		pinctrl-1 = <&attn_irq>;
+
+		synaptics,irq_gpio = <&tlmm 121 0x0>;
+		synaptics,irq_type = <8200>;
+		synaptics,max_coords = <1536 2048>;	/* x y */
+		synaptics,num_lines = <49 37>;		/* rx tx */
+
+		tsp_io-supply = <&pm8998_l6>;
+		tsp_avdd-supply = <&pm8998_l28>;
+
+		synaptics,project_name = "GTS3","T825";
+		synaptics,firmware_name = "tsp_synaptics/s5807_gts3llte.fw";
+	};
+
+	/* stm */
+	touchscreen@49 {
+		status = "okay";
+		compatible = "stm,fts_touch";
+		reg = <0x49>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <121 0x0>;
+		pinctrl-names = "on_state", "off_state";
+		pinctrl-0 = <&attn_irq>;
+		pinctrl-1 = <&attn_irq>;
+		stm,irq_gpio = <&tlmm 121 0x2008>;
+		stm,irq_type = <8200>;
+		stm,max_coords = <1599 2559>;	/* x y */
+		stm,regulator_dvdd = "tsp_io";
+		stm,regulator_avdd = "tsp_avdd";
+		stm,project_name = "GTS4", "T835";
+		stm,firmware_name = "tsp_stm/fts1ba90a_gts4.fw";
+		stm,pat_function = <1>;
+	};
+};
+
+&i2c_9 {
+	status = "okay";
+
+	wacom@56 {
+		status = "okay";
+		compatible = "wacom,w90xx";
+		reg = <0x56>;
+		pinctrl-names = "default";
+		pinctrl-0 = <&epen_int_active>;
+		interrupt-parent = <&tlmm>;
+		interrupts = <125 0x0>;
+		vddo-supply = <&wacom_ldo_en>; /* vdd3.3v - use regulator-fixed */
+		/* gpios */
+		wacom,irq-gpio = <&tlmm 125 0x0>;
+		wacom,pdct-gpio = <&tlmm 123 0x0>;
+		wacom,fwe-gpio = <&tlmm 126 0x0>;
+		wacom,irq_type = <8>; /*IRQF_TRIGGER_LOW*/
+		/* features */
+		wacom,boot_addr = <0x09>;
+		wacom,origin = <0 0>; /* x y */
+		wacom,max_coords = <22656 14160>; /* x y */
+		wacom,max_pressure = <4095>;
+		wacom,max_x_tilt = <63>;
+		wacom,max_y_tilt = <63>;
+		wacom,max_height = <255>;
+		wacom,project_name = "GTS4LLTE", "T835";
+		wacom,invert = <0 1 1>; /* x y switch */
+		wacom,fw_path = "epen/w9019_gts4l.fw";
+		wacom,ic_type = <9019>;
+		wacom,support_aop_mode = "1"; /* S-note want to check to use aop */
+	};
+};
+
+&rpm_bus {
+	rpm-regulator-ldoa6 {
+		regulator-l6 {
+			status = "okay";
+			regulator-name = "tsp_io";
+			regulator-boot-on;
+			regulator-min-microvolt = <1800000>;
+			regulator-max-microvolt = <1800000>;
+		};
+	};
+
+	rpm-regulator-ldoa28 {
+		regulator-l28 {
+			status = "okay";
+			regulator-name = "tsp_avdd";
+			regulator-boot-on;
+			regulator-min-microvolt = <3300000>;
+			regulator-max-microvolt = <3300000>;
+		};
+	};
+};
+
+&spmi_bus {
+	qcom,pm8998@0 {
+		pm8998_gpios: gpios {
+			gpio@d200 { /* PM8998 GPIO 19 */
+				status = "okay";
+				qcom,mode = <0x0>;
+				qcom,pull = <0x0>;
+				qcom,vin-sel = <0x0>;
+				qcom,src-sel = <0x0>;
+				qcom,master-en = <0x1>;
+				qcom,out-strength = <0x1>;
+			};
+		};
+	};
+};
+
+&tlmm {
+	epen_int {
+		epen_int_active: epen_int_active {
+			epen_int_active {
+				pins = "gpio123", "gpio125";
+				drive-strength = <2>;
+				bias-disable;
+			};
+		};
+	};
+};

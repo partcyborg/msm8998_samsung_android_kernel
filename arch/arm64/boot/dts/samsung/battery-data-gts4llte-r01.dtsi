@@ -1,0 +1,51 @@
+/* Copyright (c) 2014, The Linux Foundation. All rights reserved.
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 and
+ * only version 2 as published by the Free Software Foundation.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ */
+#include "battery-data-gts4llte-common.dtsi"
+&soc {
+	i2c12: i2c@12 {
+		cell-index = <12>;
+		compatible = "i2c-gpio";
+		gpios = <&tlmm 69 0 /* sda */
+			&tlmm 35 0 /* scl */
+			>;
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		bq25898s-charger@6b {
+			compatible = "ti,bq25898s-charger";
+			reg = <0x6B>;
+			bq25898s-charger,irq-gpio = <&tlmm 58 0>;
+		};
+	};
+
+	battery {
+		battery,charger_name = "sec-multi-charger";
+		battery,fuelgauge_name = "s2mu004-fuelgauge";
+		battery,support_pogo = <1>;
+	};
+
+	sec-multi-charger {
+		status = "okay";
+		compatible = "samsung,sec-multi-charger";
+
+		charger,battery_name = "battery";
+		charger,main_charger = "s2mu004-charger";
+		charger,sub_charger = "bq25898s-charger";
+
+		charger,is_serial = <0>;
+
+		charger,sub_charger_condition = <0x51>;
+		charger,sub_charger_condition_current_max = <1000>;
+		charger,sub_charger_condition_online = <33>;
+		charger,sub_charger_condition_charge_power = <10000>;
+	};
+};
